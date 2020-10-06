@@ -109,6 +109,18 @@ def find_unit_clauses(clauses):
             unit.append(clause)
     return unit
     
+def DPLL(clauses, symbols, model):
+
+    P, value = find_pure_symbols(clauses, symbols)
+    if P:
+        tmp_model = model
+        tmp_model[P]=value
+        return DPLL(clauses, symbols, model)
+    P, value = find_unit_clauses(clauses)
+    if P:
+        tmp_model = model
+        tmp_model[P]=value
+        return DPLL(clauses, symbols, model)
 formula = generate_formula()
 print(formula)
 
