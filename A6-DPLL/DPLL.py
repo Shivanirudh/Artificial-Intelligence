@@ -15,7 +15,6 @@ class Clause():
         clause += "}"
         return clause
     
-    def evaluate(self):
 
 class Formula():
     def __init__(self, no_clauses, clauses):
@@ -25,7 +24,7 @@ class Formula():
     def __str__(self):
         formula = "{ "
         for i in range(0, self.no_clauses):
-            formula += (self.clauses[i] + " ")
+            formula += (str(self.clauses[i]) + " ")
             if i != self.no_clauses - 1:
                 formula += ", "
         formula += "}"
@@ -64,4 +63,4 @@ def generate_formula():
     formula = Formula(no_clauses, clauses)
     return formula
 
-
+print(generate_formula())
