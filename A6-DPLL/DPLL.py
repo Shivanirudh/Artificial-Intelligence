@@ -156,10 +156,23 @@ def DPLL(clauses, symbols, model):
         tmp_symbols = [i for i in symbols]
         tmp_symbols.remove(P)
         return DPLL(clauses, tmp_symbols, tmp_model)
+    P = symbols[0]
+    rest = symbols[1:]
+    tmp1, tmp2 = model, model
+    tmp1[P], tmp2[P] = True, False
 
+    return DPLL(clauses, rest, tmp1) or DPLL(clauses, rest, tmp2)
     
 formula = generate_formula()
 print(formula)
+
+clauses, symbols = generate_parameters(formula)
+
+solution, model = DPLL(clauses, symbols, {})
+if solution:
+    print(model)
+else:
+    print("Not satisfiable")
 
 
 
