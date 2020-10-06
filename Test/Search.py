@@ -104,7 +104,7 @@ class State(object):
         self.goal = goal
         self.parent = parent
 
-    def generate_successors(self, obstacles):
+    def generate_successors(self, obstacles, dead_ends):
         line = Line(self.point, self.goal)
         if check_intersection(line, obstacles) == False:
             return [State(self.goal, self.distance_from_start + line.length(), self.goal, self)]
@@ -112,9 +112,10 @@ class State(object):
         successors = []
         for obstacle in obstacles:
             for vertex in obstacle.vertices:
-                line = Line(self.point, vertex)
-                if check_intersection(line, obstacles) == False:
-                    successors.append(State(vertex, self.distance_from_start + line.length(), self.goal, self))
+                if vertex not in dead_ends:
+                    line = Line(self.point, vertex)
+                    if check_intersection(line, obstacles) == False:
+                        successors.append(State(vertex, self.distance_from_start + line.length(), self.goal, self))
         return successors
         
     def heuristics(self):
@@ -145,15 +146,19 @@ def solve(start_point, goal_point, obstacles):
     bag_of_states = []
     explored = set()
     heapq.heappush(bag_of_states, start_state)
+    dead_ends = []
 
     while len(bag_of_states):
         current_state = heapq.heappop(bag_of_states)
-        explored.add(current_state)
+        if current_state in explored:
+            dead_ends.append(current_state.parent.point)
+        else:
+            explored.add(current_state)
 
-        if current_state.goal_test():
+        if current_state.goal_test() or len(explored)>50:
             return current_state, True
 
-        for next_state in current_state.generate_successors(obstacles):
+        for next_state in current_state.generate_successors(obstacles, dead_ends):
             if next_state not in explored:
                 heapq.heappush(bag_of_states, next_state)
 
