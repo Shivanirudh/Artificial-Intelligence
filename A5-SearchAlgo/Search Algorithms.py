@@ -244,7 +244,7 @@ def route_find(start, end):
 
 
 route, cost = route_find(source, goal)
-print("The route taken is "+str(route)+" at cost "+str(cost))
+print("The route taken is "+str(route)+"  with cost "+str(cost))
 
 
 # In[ ]:
@@ -309,6 +309,6 @@ S                   |                   |                   |                   
 |                   |                   |                   |                   |                   | 
 |                   |                   |                   |                   |                   G 
 -----------------------------------------------------------------------------------------------------
-The route taken is [(0, 0), (18, 22), (24, 27), (33, 42), (34, 44), (50, 50)]at cost 90.14052912631625
+The route taken is [(0, 0), (18, 22), (24, 27), (33, 42), (34, 44), (50, 50)] with cost 90.14052912631625
 '''
 
