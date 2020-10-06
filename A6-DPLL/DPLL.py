@@ -15,6 +15,18 @@ class Clause():
         clause += "}"
         return clause
     
+    def evaluate(self, assignment):
+        result = False
+        for l in self.literals:
+            symbol = l[:2]
+            val = assignment[symbol]
+            if l[-1] == "'":
+                val = not val
+            self.values.append(val)
+        for i in self.values:
+            result = result or i
+        return result
+
 
 class Formula():
     def __init__(self, no_clauses, clauses):
@@ -63,4 +75,42 @@ def generate_formula():
     formula = Formula(no_clauses, clauses)
     return formula
 
-print(generate_formula())
+def generate_parameters(formula):
+    clauses = formula.clauses
+    symbols = []
+    for clause in formula.clauses:
+        for literal in clause.literals:
+            symbol = literal[:2]
+            if symbol not in symbols:
+                symbols.append(symbol)
+    return clauses, symbols
+
+def generate_assignment(symbols):
+    assignment = dict()
+    for i in range(len(symbols)):
+        val = random.randint(0, 1)
+        x = True if val == 1 else False
+        assignment[symbols[i]] = x
+    return assignment
+
+def find_pure_symbols(clauses, symbols):
+    pure = []
+    for s in symbols:
+        sym = s + "'"
+        for clause in clauses:
+            if (s in clause.literals and sym not in clause.literals) or (s not in clause.literals and sym in clause.literals):
+                pure.append(s)
+    return pure
+
+def find_unit_clauses(clauses):
+    unit = []
+    for clause in clauses:
+        if clause.no_literals == 1:
+            unit.append(clause)
+    return unit
+    
+formula = generate_formula()
+print(formula)
+
+
+
