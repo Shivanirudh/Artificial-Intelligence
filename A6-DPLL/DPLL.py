@@ -3,30 +3,46 @@ import random
 class Clause():
     def __init__(self, no_literals, literals):
         self.no_literals = no_literals
-        self.literals = [i for i in literals]
-        self.values = []
+        self.literals = dict()
+        for i in literals:
+            self.literals[i] = None
     
     def __str__(self):
         clause = "{ "
         for i in range(0, self.no_literals):
-            clause += (self.literals[i] + " ")
+            clause += (self.literals.keys()[i] + " ")
             if i != self.no_literals - 1:
                 clause += ", "
         clause += "}"
         return clause
     
-    def evaluate(self, assignment):
-        result = False
-        for l in self.literals:
-            symbol = l[:2]
-            val = assignment[symbol]
-            if l[-1] == "'":
+    def assign(self, assignment):
+        i = 0
+        while i < self.no_literals:
+            symbol = self.literals.keys()[i][:2]
+            if symbol in assignment.keys():
+                val = assignment[symbol]
+            else:
+                i += 1
+                continue
+            if self.literals.keys()[i][-1] == "'":
                 val = not val
-            self.values.append(val)
-        for i in self.values:
-            result = result or i
+            self.literals[self.literals.keys()[i]] = val 
+            i += 1
+            
+    def evaluate(self, assignment):
+        self.assign(assignment)
+        flag = True
+        result = False
+        for i in self.literals.values():
+            if i == True:
+                return True
+            if i == None:
+                flag = False
+        if flag:
+            for i in self.literals.values():
+                result = result or i
         return result
-
 
 class Formula():
     def __init__(self, no_clauses, clauses):
@@ -85,7 +101,7 @@ def generate_parameters(formula):
                 symbols.append(symbol)
     return clauses, symbols
 
-def generate_assignment(symbols):
+def generate_model(symbols):
     assignment = dict()
     for i in range(len(symbols)):
         val = random.randint(0, 1)
@@ -96,7 +112,7 @@ def generate_assignment(symbols):
 def find_pure_symbols(clauses, symbols):
     pure = []
     for s in symbols:
-        sym = s + "'"
+        sym = (s + "'")
         for clause in clauses:
             if (s in clause.literals and sym not in clause.literals) or (s not in clause.literals and sym in clause.literals):
                 pure.append(s)
@@ -110,17 +126,38 @@ def find_unit_clauses(clauses):
     return unit
     
 def DPLL(clauses, symbols, model):
+    
+    #If every clause in clauses is True, return True
+    #If some clause in clauses is False, return False
+    clause_check = True
+    for clause in clauses:
+        if clause.evaluate(model) == False:
+            clause_check = False
+            return False, None
+    if clause_check:
+        return True, model
+    
+    #Find pure symbols
+    pure = find_pure_symbols(clauses, symbols)
+    P, value = pure[0], model[pure[0]]
+    if P:
+        tmp_model = model
+        tmp_model[P]=value
+        tmp_symbols = [i for i in symbols]
+        tmp_symbols.remove(P)
+        return DPLL(clauses, tmp_symbols, tmp_model)
+    
+    #Find unit symbols
+    unit =  find_unit_clauses(clauses)
+    P, value = unit[0], model[unit[0]]
+    if P:
+        tmp_model = model
+        tmp_model[P]=value
+        tmp_symbols = [i for i in symbols]
+        tmp_symbols.remove(P)
+        return DPLL(clauses, tmp_symbols, tmp_model)
 
-    P, value = find_pure_symbols(clauses, symbols)
-    if P:
-        tmp_model = model
-        tmp_model[P]=value
-        return DPLL(clauses, symbols, model)
-    P, value = find_unit_clauses(clauses)
-    if P:
-        tmp_model = model
-        tmp_model[P]=value
-        return DPLL(clauses, symbols, model)
+    
 formula = generate_formula()
 print(formula)
 
