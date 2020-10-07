@@ -34,12 +34,12 @@ class Clause():
     def evaluate(self, model):
         self.assign(model)
         result = False
-        for i,j in self.values.items():
+        for j in self.values.values():
             if j == True:
                 return True
             if j == None:
                 return None
-        for i,j in self.values.items():
+        for j in self.values.values():
             result = result or j
         return result
 
@@ -124,10 +124,11 @@ def find_pure_symbols(clauses, symbols, model):
             pure.append(s)
     for i in pure:
         assn[i] = None
-    for symbol in pure:
+    for s in pure:
         for clause in clauses:
             tmp_model = model
-            if symbol in clause.literals:
+            if s in clause.literals:
+                symbol = s[:2]
                 tmp_model[symbol] = True
                 clause_result = clause.evaluate(tmp_model)
                 if clause_result == True:
@@ -142,10 +143,23 @@ def find_pure_symbols(clauses, symbols, model):
 def find_unit_clauses(clauses, model):
     unit = []
     for clause in clauses:
-        flag = False
         if clause.no_literals == 1:
-            unit.append(clause)
-    return unit
+            unit.append(clause.literals[0][:2])
+        else:
+            Fcount, Ncount = 0, 0
+            for l,v in clause.values.items():
+                if v == False:
+                    Fcount += 1
+                elif v == None:
+                    sym = l[:2]
+                    Ncount += 1
+            if Fcount == clause.no_literals - 1 and Ncount == 1:
+                unit.append(sym)
+    assn = dict()
+    for i in unit:
+        assn[i] = True
+
+    return unit, assn
     
 def DPLL(clauses, symbols, model):
     
@@ -164,25 +178,30 @@ def DPLL(clauses, symbols, model):
         return True, model
     
     #Find pure symbols
-    pure, assn = find_pure_symbols(clauses, symbols)
-    P, value = pure[0], assn[pure[0]]
+    pure, assn = find_pure_symbols(clauses, symbols, model)
+    P = None
+    if len(pure) > 0:
+        P, value = pure[0], assn[pure[0]]
     
     if P:
         tmp_model = model
         tmp_model[P]=value
         tmp_symbols = [i for i in symbols]
-        tmp_symbols.remove(P)
+        if P in tmp_symbols:
+            tmp_symbols.remove(P)
         return DPLL(clauses, tmp_symbols, tmp_model)
     
     #Find unit symbols
-    unit =  find_unit_clauses(clauses)
-    P = unit[0]
-    value = model[unit[0]] if P in model.keys() else None
+    unit, assn =  find_unit_clauses(clauses, model)
+    P = None
+    if len(unit) > 0:
+        P, value = unit[0], assn[unit[0]]
     if P:
         tmp_model = model
         tmp_model[P]=value
         tmp_symbols = [i for i in symbols]
-        tmp_symbols.remove(P)
+        if P in tmp_symbols:
+            tmp_symbols.remove(P)
         return DPLL(clauses, tmp_symbols, tmp_model)
     P = symbols[0]
     rest = symbols[1:]
@@ -197,11 +216,9 @@ print(formula)
 clauses, symbols = generate_parameters(formula)
 
 solution, model = DPLL(clauses, symbols, {})
-print(model)
+
 if solution:
     print(model)
 else:
     print("Not satisfiable")
-
-
 
