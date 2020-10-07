@@ -222,3 +222,18 @@ if solution:
 else:
     print("Not satisfiable")
 
+'''
+Output:
+
+{ { A4 , A3 , A5' , A1 , A3' } , { A4 } , { A3 } }
+{'A4': True, 'A1': True, 'A3': True}
+{'A4': True, 'A1': True, 'A3': True}
+
+
+{ { A4 , A5' } , { A5 , A1 , A2 } , { A3 , A4 , A4' } }
+{'A1': None, 'A2': True, 'A3': True, 'A4': True, 'A5': True}
+
+
+{ { A3' , A1' , A5 , A4 } , { A4' } , { A1 , A5' } , { A1 } , { A3' , A1 , A4' } , { A1 , A1' , A3' } , { A5' , A3' } }
+Not satisfiable
+'''
