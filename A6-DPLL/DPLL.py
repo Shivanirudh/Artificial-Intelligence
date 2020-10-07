@@ -108,18 +108,41 @@ def generate_model(symbols):
         assignment[symbols[i]] = x
     return assignment
 
-def find_pure_symbols(clauses, symbols):
+def find_pure_symbols(clauses, symbols, model):
     pure = []
+    assn = dict()
+    literals = []
+    
+    for clause in clauses:
+        if clause.evaluate(model) == True:
+            continue
+        for l in clause.literals:
+            literals.append(l)
     for s in symbols:
         sym = (s + "'")
+        if (s in literals and sym not in literals) or (s not in literals and sym in literals):
+            pure.append(s)
+    for i in pure:
+        assn[i] = None
+    for symbol in pure:
         for clause in clauses:
-            if (s in clause.literals and sym not in clause.literals) or (s not in clause.literals and sym in clause.literals):
-                pure.append(s)
-    return pure
+            tmp_model = model
+            if symbol in clause.literals:
+                tmp_model[symbol] = True
+                clause_result = clause.evaluate(tmp_model)
+                if clause_result == True:
+                    assn[symbol] = True
+                else:
+                    tmp_model[symbol] = False
+                    clause_result = clause.evaluate(tmp_model)
+                    if clause_result == True:
+                        assn[symbol] = False
+    return pure, assn
 
-def find_unit_clauses(clauses):
+def find_unit_clauses(clauses, model):
     unit = []
     for clause in clauses:
+        flag = False
         if clause.no_literals == 1:
             unit.append(clause)
     return unit
@@ -141,9 +164,9 @@ def DPLL(clauses, symbols, model):
         return True, model
     
     #Find pure symbols
-    pure = find_pure_symbols(clauses, symbols)
-    P = pure[0]
-    value = model[pure[0]] if P in model.keys() else None
+    pure, assn = find_pure_symbols(clauses, symbols)
+    P, value = pure[0], assn[pure[0]]
+    
     if P:
         tmp_model = model
         tmp_model[P]=value
