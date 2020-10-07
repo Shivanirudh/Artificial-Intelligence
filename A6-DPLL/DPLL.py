@@ -142,7 +142,8 @@ def DPLL(clauses, symbols, model):
     
     #Find pure symbols
     pure = find_pure_symbols(clauses, symbols)
-    P, value = pure[0], model[pure[0]]
+    P = pure[0]
+    value = model[pure[0]] if P in model.keys() else None
     if P:
         tmp_model = model
         tmp_model[P]=value
@@ -152,7 +153,8 @@ def DPLL(clauses, symbols, model):
     
     #Find unit symbols
     unit =  find_unit_clauses(clauses)
-    P, value = unit[0], model[unit[0]]
+    P = unit[0]
+    value = model[unit[0]] if P in model.keys() else None
     if P:
         tmp_model = model
         tmp_model[P]=value
