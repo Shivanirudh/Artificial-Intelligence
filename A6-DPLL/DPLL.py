@@ -3,45 +3,44 @@ import random
 class Clause():
     def __init__(self, no_literals, literals):
         self.no_literals = no_literals
-        self.literals = dict()
-        for i in literals:
-            self.literals[i] = None
+        self.literals = [i for i in literals]
+        self.values = dict()
+        for i in self.literals:
+            self.values[i] = None
     
     def __str__(self):
         clause = "{ "
         for i in range(0, self.no_literals):
-            clause += (self.literals.keys()[i] + " ")
+            clause += (self.literals[i] + " ")
             if i != self.no_literals - 1:
                 clause += ", "
         clause += "}"
         return clause
     
-    def assign(self, assignment):
+    def assign(self, model):
         i = 0
         while i < self.no_literals:
-            symbol = self.literals.keys()[i][:2]
-            if symbol in assignment.keys():
-                val = assignment[symbol]
+            symbol = self.literals[i][:2]
+            if symbol in model.keys():
+                val = model[symbol]
             else:
                 i += 1
                 continue
-            if self.literals.keys()[i][-1] == "'":
+            if self.literals[i][-1] == "'":
                 val = not val
-            self.literals[self.literals.keys()[i]] = val 
+            self.values[self.literals[i]] = val 
             i += 1
             
-    def evaluate(self, assignment):
-        self.assign(assignment)
-        flag = True
+    def evaluate(self, model):
+        self.assign(model)
         result = False
-        for i in self.literals.values():
-            if i == True:
+        for i,j in self.values.items():
+            if j == True:
                 return True
-            if i == None:
-                flag = False
-        if flag:
-            for i in self.literals.values():
-                result = result or i
+            if j == None:
+                return None
+        for i,j in self.values.items():
+            result = result or j
         return result
 
 class Formula():
@@ -129,12 +128,16 @@ def DPLL(clauses, symbols, model):
     
     #If every clause in clauses is True, return True
     #If some clause in clauses is False, return False
-    clause_check = True
+    check_clause_all_true = True
     for clause in clauses:
-        if clause.evaluate(model) == False:
-            clause_check = False
+        clause_check = clause.evaluate(model)
+        if clause_check == False:
             return False, None
-    if clause_check:
+        elif clause_check == None:
+            check_clause_all_true = False
+            continue
+
+    if check_clause_all_true:
         return True, model
     
     #Find pure symbols
@@ -169,6 +172,7 @@ print(formula)
 clauses, symbols = generate_parameters(formula)
 
 solution, model = DPLL(clauses, symbols, {})
+print(model)
 if solution:
     print(model)
 else:
