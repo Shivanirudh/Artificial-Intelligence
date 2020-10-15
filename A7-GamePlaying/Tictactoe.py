@@ -45,46 +45,6 @@ def minmax_decision(state, game):
 
 # ______________________________________________________________________________
 
-
-def expect_minmax(state, game):
-    """
-    Return the best move for a player after dice are thrown. The game tree
-	includes chance nodes along with min and max nodes.
-	"""
-    player = game.to_move(state)
-
-    def max_value(state):
-        v = -np.inf
-        for a in game.actions(state):
-            v = max(v, chance_node(state, a))
-        return v
-
-    def min_value(state):
-        v = np.inf
-        for a in game.actions(state):
-            v = min(v, chance_node(state, a))
-        return v
-
-    def chance_node(state, action):
-        res_state = game.result(state, action)
-        if game.terminal_test(res_state):
-            return game.utility(res_state, player)
-        sum_chances = 0
-        num_chances = len(game.chances(res_state))
-        for chance in game.chances(res_state):
-            res_state = game.outcome(res_state, chance)
-            util = 0
-            if res_state.to_move == player:
-                util = max_value(res_state)
-            else:
-                util = min_value(res_state)
-            sum_chances += util * game.probability(chance)
-        return sum_chances / num_chances
-
-    # Body of expect_minmax:
-    return max(game.actions(state), key=lambda a: chance_node(state, a), default=None)
-
-
 def alpha_beta_search(state, game):
     """Search game to determine best action; use alpha-beta pruning.
     This version searches all the way to the leaves."""
@@ -125,77 +85,8 @@ def alpha_beta_search(state, game):
             best_action = a
     return best_action
 
-
-def alpha_beta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
-    """Search game to determine best action; use alpha-beta pruning.
-    This version cuts off search and uses an evaluation function."""
-
-    player = game.to_move(state)
-
-    # Functions used by alpha_beta
-    def max_value(state, alpha, beta, depth):
-        if cutoff_test(state, depth):
-            return eval_fn(state)
-        v = -np.inf
-        for a in game.actions(state):
-            v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-            if v >= beta:
-                return v
-            alpha = max(alpha, v)
-        return v
-
-    def min_value(state, alpha, beta, depth):
-        if cutoff_test(state, depth):
-            return eval_fn(state)
-        v = np.inf
-        for a in game.actions(state):
-            v = min(v, max_value(game.result(state, a), alpha, beta, depth + 1))
-            if v <= alpha:
-                return v
-            beta = min(beta, v)
-        return v
-
-    # Body of alpha_beta_cutoff_search starts here:
-    # The default test cuts off at depth d or at a terminal state
-    cutoff_test = (cutoff_test or (lambda state, depth: depth > d or game.terminal_test(state)))
-    eval_fn = eval_fn or (lambda state: game.utility(state, player))
-    best_score = -np.inf
-    beta = np.inf
-    best_action = None
-    for a in game.actions(state):
-        v = min_value(game.result(state, a), best_score, beta, 1)
-        if v > best_score:
-            best_score = v
-            best_action = a
-    return best_action
-
-
 # ______________________________________________________________________________
 # Players for Games
-
-
-def query_player(game, state):
-    """Make a move by querying standard input."""
-    print("current state:")
-    game.display(state)
-    print("available moves: {}".format(game.actions(state)))
-    print("")
-    move = None
-    if game.actions(state):
-        move_string = input('Your move? ')
-        try:
-            move = eval(move_string)
-        except NameError:
-            move = move_string
-    else:
-        print('no legal moves: passing turn to next player')
-    return move
-
-
-def random_player(game, state):
-    """A player that chooses a legal move at random."""
-    return random.choice(game.actions(state)) if game.actions(state) else None
-
 
 def alpha_beta_player(game, state):
     return alpha_beta_search(state, game)
@@ -203,11 +94,6 @@ def alpha_beta_player(game, state):
 
 def minmax_player(game,state):
     return minmax_decision(state,game)
-
-
-def expect_minmax_player(game, state):
-    return expect_minmax(state, game)
-
 
 # ______________________________________________________________________________
 # Some Sample Games
@@ -221,6 +107,8 @@ class Game:
     successors or you can inherit their default methods. You will also
     need to set the .initial attribute to the initial state; this can
     be done in the constructor."""
+    def __init__(self, initial_state):
+        self.initial = initial_state
 
     def actions(self, state):
         """Return a list of the allowable moves at this point."""
@@ -417,4 +305,5 @@ class TicTacToe(Game):
         return n >= self.k
 
 game = TicTacToe()
-game.display()
+initial_state = game.initial
+game.play_game()
