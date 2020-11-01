@@ -10,6 +10,7 @@ from collections import namedtuple
 
 import numpy as np
 
+
 GameState = namedtuple('GameState', 'to_move, utility, board, moves')
 StochasticGameState = namedtuple('StochasticGameState', 'to_move, utility, board, moves, chance')
 
@@ -87,6 +88,10 @@ def alpha_beta_search(state, game):
 
 # ______________________________________________________________________________
 # Players for Games
+
+def random_player(game, state):
+    """A player that chooses a legal move at random."""
+    return random.choice(game.actions(state)) if game.actions(state) else None
 
 def alpha_beta_player(game, state):
     return alpha_beta_search(state, game)
@@ -181,60 +186,6 @@ class StochasticGame(Game):
                     return self.utility(state, self.to_move(self.initial))
 
 
-class Fig52Game(Game):
-    """The game represented in [Figure 5.2]. Serves as a simple test case."""
-
-    succs = dict(A=dict(a1='B', a2='C', a3='D'),
-                 B=dict(b1='B1', b2='B2', b3='B3'),
-                 C=dict(c1='C1', c2='C2', c3='C3'),
-                 D=dict(d1='D1', d2='D2', d3='D3'))
-    utils = dict(B1=3, B2=12, B3=8, C1=2, C2=4, C3=6, D1=14, D2=5, D3=2)
-    initial = 'A'
-
-    def actions(self, state):
-        return list(self.succs.get(state, {}).keys())
-
-    def result(self, state, move):
-        return self.succs[state][move]
-
-    def utility(self, state, player):
-        if player == 'MAX':
-            return self.utils[state]
-        else:
-            return -self.utils[state]
-
-    def terminal_test(self, state):
-        return state not in ('A', 'B', 'C', 'D')
-
-    def to_move(self, state):
-        return 'MIN' if state in 'BCD' else 'MAX'
-
-
-class Fig52Extended(Game):
-    """Similar to Fig52Game but bigger. Useful for visualisation"""
-
-    succs = {i: dict(l=i * 3 + 1, m=i * 3 + 2, r=i * 3 + 3) for i in range(13)}
-    utils = dict()
-
-    def actions(self, state):
-        return sorted(list(self.succs.get(state, {}).keys()))
-
-    def result(self, state, move):
-        return self.succs[state][move]
-
-    def utility(self, state, player):
-        if player == 'MAX':
-            return self.utils[state]
-        else:
-            return -self.utils[state]
-
-    def terminal_test(self, state):
-        return state not in range(13)
-
-    def to_move(self, state):
-        return 'MIN' if state in {1, 2, 3} else 'MAX'
-
-
 class TicTacToe(Game):
     """Play TicTacToe on an h x v board, with Max (first player) playing 'X'.
     A state has the player to move, a cached utility, a list of moves in
@@ -304,6 +255,87 @@ class TicTacToe(Game):
         n -= 1  # Because we counted move itself twice
         return n >= self.k
 
-game = TicTacToe()
-initial_state = game.initial
-game.play_game()
+def min_max_ttt_game():
+    game = TicTacToe()
+    state = game.initial
+    i = 1
+
+    # Empty board
+    print("Step "+str(i)+":" )
+    game.display(state)
+    print()
+
+    # Random move made by 'X'
+    state = game.result(state, minmax_player(game, state))
+
+    i += 1
+    print("Step "+str(i)+":" )
+    game.display(state)
+    print()
+
+    # Till game hasn't terminated
+    while game.terminal_test(state) == False:
+        move = minmax_player(game, state)
+        state = game.result(state, move)
+
+        print("Step "+str(i)+":" )
+        game.display(state)
+        print()
+        
+        i += 1
+
+min_max_ttt_game()
+
+'''
+Output:
+python3 Tictactoe.py
+Step 1:
+. . . 
+. . . 
+. . . 
+
+Step 2:
+X . . 
+. . . 
+. . . 
+
+Step 2:
+X . . 
+. O . 
+. . . 
+
+Step 3:
+X X . 
+. O . 
+. . . 
+
+Step 4:
+X X O 
+. O . 
+. . . 
+
+Step 5:
+X X O 
+. O . 
+X . . 
+
+Step 6:
+X X O 
+O O . 
+X . . 
+
+Step 7:
+X X O 
+O O X 
+X . . 
+
+Step 8:
+X X O 
+O O X 
+X O . 
+
+Step 9:
+X X O 
+O O X 
+X O X
+'''
